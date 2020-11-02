@@ -1,1 +1,1 @@
-# -combination-generator
+# generator
