@@ -28,22 +28,15 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/combination")
-public class CombinationController {
+public class CombinationsController {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CombinationController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CombinationsController.class);
 
     @Autowired
     private GraduationService graduationService;
 
-    /**
-     * Manage uploaded memberships file
-     *
-     * @param file memberships file
-     * @return Memberships list
-     */
     @PostMapping(value = "/file")
-    public ResponseEntity getRegistrations(@RequestPart("file") MultipartFile file) {
-        LOGGER.info("Get list of combination after treatment");
+    public ResponseEntity getCombination(@RequestPart("file") MultipartFile file) {
         try {
             Map<String, Integer> graduations = graduationService.getGraduations(file.getInputStream());
 
@@ -55,7 +48,9 @@ public class CombinationController {
                     smallestCombination.getGraduates().forEach(graduations::remove);
                     optimizeCombination.add(smallestCombination);
                 } else {
-                    graduations = new HashMap<>();
+                    smallestCombination = getSmallestPositive(graduations);
+                    smallestCombination.getGraduates().forEach(graduations::remove);
+                    optimizeCombination.add(smallestCombination);
                 }
             }
             Collections.sort(optimizeCombination, Comparator.comparing(Combination::getDifferentWith3000));
@@ -63,7 +58,6 @@ public class CombinationController {
             customExcelWriter.createXLSXFile(optimizeCombination);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
-            LOGGER.error("Echec de l'export des fichiers de réinscription", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -88,6 +82,36 @@ public class CombinationController {
         }).collect(Collectors.toList());
 
         combinations = combinations.stream().filter(combination -> combination.getDifferentWith3000() < 0).collect(Collectors.toList());
+
+        if (combinations.size() > 0) {
+            Combination smallestCombination = combinations.get(0);
+
+            smallestCombination = getCombination(combinations, smallestCombination);
+            return smallestCombination;
+        }
+        return null;
+    }
+
+    private Combination getSmallestPositive(Map<String, Integer> graduations) {
+        List<Combination> combinations = Generator.combination(graduations.keySet().toArray()).simple(3).stream().map(graduates -> {
+            final String[] combination = { "" };
+            final Integer[] totalLength = { 0 };
+            graduates.stream().forEach(graduate -> {
+                if (combination[0].isEmpty()) {
+                    combination[0] = combination[0] + graduate;
+                } else {
+                    combination[0] = combination[0] + " - " + graduate;
+                }
+                if(graduate==null){
+                    Integer t = 0;
+                }
+                totalLength[0] = totalLength[0] + graduations.get(graduate);
+            });
+            return Combination.builder().graduates(graduates).combination(combination[0]).totalLength(totalLength[0])
+                    .differentWith3000(totalLength[0] - 3000).build();
+        }).collect(Collectors.toList());
+
+        combinations = combinations.stream().filter(combination -> combination.getDifferentWith3000() > 0).collect(Collectors.toList());
 
         if (combinations.size() > 0) {
             Combination smallestCombination = combinations.get(0);

@@ -1,6 +1,6 @@
 import {Component} from '@angular/core';
 import {NgxFileDropEntry, FileSystemFileEntry} from 'ngx-file-drop';
-import {GeneratorService} from '../../services/registration-generator.service';
+import {RegistrationGeneratorService} from '../../services/registration-generator.service';
 import {ToastService} from '../../shared/toast/toast.service';
 
 @Component({
@@ -12,7 +12,7 @@ export class HomeComponent {
 
     public files: NgxFileDropEntry[] = [];
 
-    constructor(private registrationGeneratorService: GeneratorService, private toastService: ToastService) {
+    constructor(private registrationGeneratorService: RegistrationGeneratorService, private toastService: ToastService) {
     }
 
     public dropped(files: NgxFileDropEntry[]) {

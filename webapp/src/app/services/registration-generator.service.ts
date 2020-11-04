@@ -3,7 +3,7 @@ import {Injectable} from '@angular/core';
 import {ToastService} from '../shared/toast/toast.service';
 
 @Injectable()
-export class GeneratorService {
+export class RegistrationGeneratorService {
 
     constructor(private http: HttpClient, private toastService: ToastService) {
     }
